@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width; height=device-height; maximum-scale=1.4; initial-scale=1.0; user-scalable=yes"/> 
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-image: url('/static/Background.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-attachment: fixed;
+            color: #fff;
+        }
+
+        .tooltip-container {
+            display: inline-block;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .tooltip-container .tooltip-text {
+            visibility: hidden;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            padding: 5px;
+            border-radius: 5px;
+            position: absolute;
+            z-index: 1;
+            top: 125%;
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .tooltip-container:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Added CSS Grid Styles */
+        .container {
+          display: grid;
+          grid-template-columns: 1fr 2fr;
+          grid-gap: 20px;
+        }
+
+        .header {
+          grid-column: 2 / span 1;
+        }
+        .header h1 {
+        font-size: 48px;
+        font-weight: bold;
+        color: #ffffff;
+        /* text-shadow: 2px 2px 4px #000000; */
+        }
+        .form-group label {
+          font-size: 1.2em;
+          font-weight: bold;
+        }
+        .form-wrapper {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100%;
+        }
+    </style>
+    <title>Game Recommender</title>
+</head>
+<body>
+    <div class="container">
+        <!-- Header moved to the second column -->
+        <div class="header">
+          <h1 class="mt-5 mb-4">Game Recommender</h1>
+        </div>
+        <!-- Forum moved to the first column -->
+        <div class="forum">
+          <form action="/recommend" method="POST">
+              <div class="form-group">
+                  <label for="name">User Name:</label>
+                  <input type="text" class="form-control" id="name" name="name" required>
+              </div>
+              <div class="form-group">
+                  <label for="genres">Genres:</label>
+                  <div class="tooltip-container">
+                      <span class="font-weight-bold">[?]</span>
+                      <span class="tooltip-text">
+                          {% for genre in ['Indie', 'Action', 'Casual', 'Adventure', 'Adventure', 'Strategy', 'Casual', 'Simulation', 'RPG', 'Early Access'] %}{{ genre }}<br>{% endfor %}
+                      </span>
+                  </div>
+                  <input type="text" class="form-control" id="genres" name="genres" placeholder="Enter genres separated by commas">
+              </div>
+              <div class="form-group">
+                  <label for="free">Free:</label>
+                  <select class="form-control" id="free" name="free">
+                      <option value="True">Yes</option>
+                      <option value="False">No</option>
+                  </select>
+              </div>
+              <div class="form-group">
+                  <label for="categories">Categories:</label>
+                  <div class="tooltip-container">
+                      <span class="font-weight-bold">[?]</span>
+                      <span class="tooltip-text">
+                          {% for category in ['Single-player', 'Steam Achievements', 'Full controller support', 'Steam Cloud', 'Multi-player', 'Partial Controller Support', 'PvP', 'Steam Trading Cards', 'Co-op', 'Online PvP'] %}{{ category }}<br>{% endfor %}
+                      </span>
+                  </div>
+                  <input type="text" class="form-control" id="categories" name="categories" placeholder="Enter categories separated by commas">
+              </div>
+              <div class="form-group">
+                  <label for="platform">Platform:</label>
+                  <input type="text" class="form-control" id="platform" name="platform" required>
+              </div>
+              <div class="form-group">
+                  <label for="release_date">Release Year:</label>
+                  <input type="text" class="form-control" id="release_date" name="release_date" required>
+              </div>
+              <div class="text-center">
+                <button type="submit" class="btn btn-primary btn-lg">Find Recommendations</button>
+              </div>
+          </form>
+        </div>
+    </div>
+</body>

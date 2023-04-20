@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width; height=device-height; maximum-scale=1.4; initial-scale=1.0; user-scalable=yes"/> 
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>{{ game.Name }} - Game Description</title>
+    <style>
+        body {
+            background-image: url('/static/Background3.png');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-attachment: fixed;
+            color: #fff;
+        }
+
+        .box {
+            background-color: #240032;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .header-box {
+            background-color: #160020;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .box img {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px #240032;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header class="d-flex justify-content-center align-items-center py-3 mb-4 header-box">
+            <h1 class="mb-0">{{ game.Name }}</h1>
+        </header>
+        <div class="text-center box">
+            <img src="{{ game.Image }}" alt="{{ game.Name }}" width="400">
+        </div>
+        <div class="text-center box">
+            <p><strong>Genres:</strong> {{ game.Genres }}</p>
+            <p><strong>Categories:</strong> {{ game.Categories }}</p>
+            <p><strong>Price:</strong> {{ game.Price }}</p>
+            <p><strong>Platform:</strong> {{ game.Platform }}</p>
+            <p><strong>Release Date:</strong> {{ game.ReleaseDate }}</p>
+        </div>
+        <div class="text-center box">
+            {{ game.Description|safe }}
+        </div>
+    </div>
+</body>
+</html>

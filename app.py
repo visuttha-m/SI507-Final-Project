@@ -1,33 +1,61 @@
+#########################################
+##### Name: Visuttha Manthamkarn    #####
+##### Uniqname: visuttha            #####
+#########################################
+
 from flask import Flask, render_template, request
+import plotly.io as pio
 from GameRecommendation import *
 
 app = Flask(__name__)
 
-if os.path.isfile('GameDetails.csv') == False:
+if os.path.isfile('SteamGames.json') == False:
 
     if os.path.isfile('Appid.json'):
         AppID = ReadJSON('Appid.json')
     else:
         AppID = GatSteamAppID()
         WriteJSON('AppID.json',AppID)
-    if os.path.isfile('correctedGameDetails_full.json'):
-        GameDetails = ReadJSON('correctedGameDetails_full.json')
+    if os.path.isfile('GameDetails.json'):
+        GameDetails = ReadJSON('GameDetails.json')
     else:
         GameDetails = GetSteamGameDetails(AppID)
         WriteJSON('GameDetails.json',GameDetails)
     
-    WriteGameDetailsCSV('GameDetails.csv',GameDetails)
-
-GameList = ReadGameDetailsCSV('GameDetails.csv')
+    WriteSteamGamesCSV('SteamGames.csv',GameDetails)
+    CSVtoJson('GameDetails.csv', 'SteamGames.json')
+    
+GameList = ReadSteamGamesJSON('SteamGames.json')
 recommendations = []
 
 @app.route('/')
 def index():
+    '''Renders the index.html template, which is the main page of the web application.
+
+    Parameters  
+    ----------
+    None
+    Returns
+    -------
+    string
+        The rendered HTML for the index.html template.
+    '''
     return render_template('index.html')
 
 @app.route('/recommend', methods=['POST'])
 def recommend():
-    
+    '''Handles the user's preferences submitted from the index.html form, calculates game recommendations,
+    and renders the recommendations.html template with the recommendations.
+
+    Parameters  
+    ----------
+    None
+    Returns
+    -------
+    string
+        The rendered HTML for the recommendations.html template.
+    '''
+
     UserPreferences = User(
         UserID = request.form.get('name'),
         Genres = request.form.get('genres'),
@@ -62,10 +90,27 @@ def recommend():
     global recommendations 
     recommendations = game_graph.get_recommendations(user_vertex, k=5)
     
-    return render_template('recommendations.html', recommendations=recommendations, user=user_vertex)
+    user_edge = list(game_graph.edges.values())[-1]
+    fig = VisualizeGameGraph(user_edge)
+    graph_filename = os.path.join('static', 'graph.html')
+    pio.write_html(fig, file=graph_filename, auto_open=False)
+
+    return render_template('recommendations.html', recommendations=recommendations, user=UserPreferences, graph_filename=graph_filename)
 
 @app.route('/game/<string:game_name>')
 def game_description(game_name):
+    '''Renders the game_description.html template for a specific game, based on the game_name provided.
+    
+    Parameters  
+    ----------
+    game_name: string
+        The name of the game for which to display the description.
+    Returns
+    -------
+    string
+        The rendered HTML for the game_description.html template.
+    '''
+
     global recommendations
 
     for game,_ in recommendations:

@@ -1,3 +1,8 @@
+#########################################
+##### Name: Visuttha Manthamkarn    #####
+##### Uniqname: visuttha            #####
+#########################################
+
 import csv
 import json
 import requests
@@ -5,9 +10,14 @@ import os
 import time
 from dateutil import parser
 from bs4 import BeautifulSoup
+import numpy as np
+import plotly.graph_objects as go
+import random
+from SteamSecrets import *
 
 class Game():
-    '''
+    ''' A class that represents a Steam game.
+
     Class Attributes
     ----------------
     None
@@ -38,6 +48,7 @@ class Game():
     Image: string
         The URL of the game's header image on Steam.
     '''
+
     def __init__(self, 
                 GameID= None,
                 Name= None,
@@ -63,9 +74,13 @@ class Game():
         self.Rating = int(Rating) if Rating.isnumeric() else 0
         self.ReleaseDate = ReleaseDate
         self.Image = f"https://cdn.akamai.steamstatic.com/steam/apps/{self.GameID}/header.jpg"
+
+    def __str__(self) -> str:
+        return self.Name
     
 class User:
-    '''
+    '''A class that represents a User preferences.
+
     Class Attributes
     ----------------
     None
@@ -84,6 +99,7 @@ class User:
     ReleaseYear: string
         The user's preferred release year.
     '''
+
     def __init__(self, 
                  UserID=None,
                  Genres=None,
@@ -97,6 +113,9 @@ class User:
         self.Categories = Categories
         self.Platform = Platform
         self.ReleaseYear = ReleaseYear
+    
+    def __str__(self) -> str:
+        return self.UserID
 
 class Vertex:
     '''A class that represents a vertex in a graph.
@@ -111,6 +130,7 @@ class Vertex:
     name: string
         The name of the vertex (same as node).
     '''
+
     def __init__(self, node):
         self.node = node
         self.name = str(node)
@@ -130,57 +150,66 @@ class Graph:
         and the corresponding value is a list of tuples. Each tuple contains
         a vertex and the weight of the edge connecting it to the key vertex.
     '''
+    
     def __init__(self):
         self.nodes = []
         self.edges = {}
 
     def add_node(self, node):
-        '''
+        '''Adds a new vertex to the graph.
+
         Parameters  
         ----------
-        node:
-
+        node: object
+            The node to add to the graph.
         Returns
         -------
         None
         '''
+
         vertex = Vertex(node)
         self.nodes.append(vertex)
         self.edges[vertex.name] = []
 
     def add_edge(self, node1, node2, similarity, score):
-        '''
+        '''Adds an edge between two nodes in the graph, with the given similarity and score.
+
         Parameters  
         ----------
-        node1:
-
-        node2:
-
-        similarity:
-
-        score:
-
+        node1: object
+            The first node to connect with an edge.
+        node2: object
+            The second node to connect with an edge.
+        similarity: float
+            The similarity between the two nodes.
+        score: float
+            The score of the edge connecting the two nodes.
         Returns
         -------
         None
         '''
-        if similarity >= 0.5:  # only add edges for games with high similarity
+
+        if similarity >= 0.5: 
             self.edges[node1.name].append((node2, score))
             self.edges[node2.name].append((node1, score))
 
     def get_recommendations(self, user_vertex, k=5):
-        '''
+        ''' Returns a list of the top k recommendations for the given user vertex.
+
         Parameters  
         ----------
         user_vertex:
-
-        k:
-
+            The vertex representing the user for whom to generate recommendations.
+        k: int
+            The number of recommendations to return, by default 5.
         Returns
         -------
         list
-
+            A list of the top k recommendations for the given user vertex.
+            Each recommendation is represented as a tuple containing the node
+            name and its score.
         '''
+
         sorted_edges = sorted(self.edges[user_vertex.name], key=lambda x: x[1], reverse=True)
         top_k = [(edge[0].node, edge[1]) for edge in sorted_edges[:k]]
         return top_k
@@ -200,17 +229,15 @@ def ComputeSimilarity(node1, node2):
     float
         The similarity score between the two node.
     '''
-    # Calculate genre similarity
+
     genres1 = set([genres.lower().strip() for genres in node1.Genres.split(',')])
     genres2 = set([genres.lower().strip() for genres in node2.Genres.split(',')])
     genre_similarity = len(genres1.intersection(genres2)) / len(genres1.union(genres2))
 
-    # Calculate categories similarity
     categories1 = set([category.lower().strip() for category in node1.Categories.split(',')])
     categories2 = set([category.lower().strip() for category in node2.Categories.split(',')])
     categories_similarity = len(categories1.intersection(categories2)) / len(categories1.union(categories2))
 
-    # Combine similarities using weights (you can adjust the weights to change their importance)
     total_similarity = (
           0.7 * genre_similarity
         + 0.3 * categories_similarity
@@ -230,7 +257,8 @@ def GatSteamAppID():
         A list of dictionaries, where each dictionary represents an application
         and contains the keys 'appid' (the application's ID) and 'name
     '''
-    url = "http://api.steampowered.com/ISteamApps/GetAppList/v0002/?key=8359C2E269BEB7677433D94B572C812A&format=json"
+
+    url = f"http://api.steampowered.com/ISteamApps/GetAppList/v0002/?key={STEAM_API_KEY}&format=json"
     response = requests.get(url)
     if response.status_code == 200:
         AppID = json.loads(response.content)['applist']['apps']
@@ -252,6 +280,7 @@ def GetSteamGameDetails(AppID):
     list
         A list of dictionaries containing details for each game on Steam.
     '''
+
     GameDetails = []
     max_retries = 5
     base_delay = 5 
@@ -301,6 +330,7 @@ def WriteJSON(filename, data):
     -------
     None 
     '''
+
     DataJSON = json.dumps(data, indent = 4)
     with open(filename,'w') as f:
         f.write(DataJSON)
@@ -317,6 +347,7 @@ def ReadJSON(filename):
     dict
         The contents of the JSON file as a dictionary.
     '''
+
     with open(filename,'r') as f:
         DataJSON = json.load(f)
     return DataJSON
@@ -333,6 +364,7 @@ def GetRating(game):
     float
         The Metacritic score for the game, or None if it cannot be retrieved.
     '''
+
     game_name_encoded = requests.utils.quote(game)
     url = f"https://www.metacritic.com/search/game/{game_name_encoded}/results"
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:106.0) Gecko/20100101 Firefox/106.0"}
@@ -362,7 +394,7 @@ def GetRating(game):
 
     return rating
 
-def WriteGameDetailsCSV(filename, data):
+def WriteSteamGamesCSV(filename, data):
     '''Writes the Steam game details to a CSV file.
 
     Parameters  
@@ -375,6 +407,7 @@ def WriteGameDetailsCSV(filename, data):
     -------
     None
     '''
+
     with open(filename, 'w', newline='') as f:
         fieldnames = [
             'GameID',
@@ -414,7 +447,30 @@ def WriteGameDetailsCSV(filename, data):
                 }
             )
 
-def ReadGameDetailsCSV(filename):
+def CSVtoJson(filenameCSV, filenameJSON):
+    '''Reads a CSV file and converts it to JSON format.
+
+    Parameters  
+    ----------
+    filenameCSV: string
+        The name of the CSV file to read.
+    filenameJSON: string
+        The name of the CSV file to read.
+    Returns
+    -------
+    None
+    '''
+
+    data = []
+    with open(filenameCSV, mode='r', encoding='utf-8') as csv_file:
+        csv_reader = csv.DictReader(csv_file)
+        for row in csv_reader:
+            if '' in row: 
+                del row['']  
+            data.append(row)
+    WriteJSON(filenameJSON, data)
+
+def ReadSteamGamesCSV(filename):
     '''Reads a CSV file containing game details and returns a list of Game objects.
 
     Parameters  
@@ -425,7 +481,8 @@ def ReadGameDetailsCSV(filename):
     -------
     list
         A list of Game objects.
-    '''    
+    ''' 
+
     games = []
     with open(filename, 'r', newline='') as f:
         reader = csv.DictReader(f)
@@ -446,6 +503,39 @@ def ReadGameDetailsCSV(filename):
             games.append(game)
     return games
 
+def ReadSteamGamesJSON(filename):
+    '''Reads a JSON file containing game details and returns a list of Game objects.
+
+    Parameters  
+    ----------
+    filename: string
+        The name of the JSON file to read.
+    Returns
+    -------
+    list
+        A list of Game objects.
+    ''' 
+
+    games = []
+    DataJSON = ReadJSON(filename)
+    
+    for data in DataJSON:
+        game = Game(
+            GameID= data['GameID'],
+            Name= data['Name'],
+            Genres= data['Genres'],
+            Free= data['Free'],
+            Price= data['Price'],
+            Platform= data['Platform'],
+            Categories= data['Categories'],
+            Description= data['Description'],
+            Recommendations= data['Recommendations'],
+            Rating= data['Rating'],
+            ReleaseDate= data['ReleaseDate']
+        )
+        games.append(game)
+    return games
+
 def AskUserPreferences():
     '''Asks the user for their game preferences and returns a User object 
     containing their preferences.
@@ -458,6 +548,7 @@ def AskUserPreferences():
     User
         A User object containing the user's preferences.
     '''
+
     user = input("Enter your name: ")
     genres = input("Enter your preferred genres (separated by commas): ").strip()
     free = input("Do you prefer free games? (Yes/No): ").strip().lower() == "yes"
@@ -488,6 +579,7 @@ def FilterGamesByPreferences(game_list, user_preferences):
     list
         A filtered list of Game objects.
     '''
+
     filtered_games = []
     for game in game_list:
         if game.Free == user_preferences.Free and user_preferences.Platform in game.Platform:
@@ -500,9 +592,62 @@ def FilterGamesByPreferences(game_list, user_preferences):
 
     return filtered_games
 
+def VisualizeGameGraph(edge_data):
+    '''Generate a visualization of a user-game graph using Plotly library.
+
+    Parameters  
+    ----------
+    edge_data: list
+        A list of tuples representing edges in the user-game graph. Each tuple contains two elements: 
+        a `GameNode` object representing a game, and a numerical score representing the user's rating for the game.
+    Returns
+    -------
+    plotly.graph_objs._figure.Figure
+        A Plotly Figure object containing a visualization of the user-game graph.
+    '''
+
+    user_x, user_y = 0.5, 0.5
+    game_nodes = [edge[0] for edge in edge_data]
+    scores = [edge[1] for edge in edge_data]
+
+    min_score, max_score = min(scores), max(scores)
+    normalized_scores = [(score - min_score) / (max_score - min_score) for score in scores]
+
+    angles = np.linspace(0, 2 * np.pi, len(game_nodes) + 1)[:-1]
+    distances = 0.45 * (1 - np.array(normalized_scores)) + 0.05  
+    x = user_x + distances * np.cos(angles)
+    y = user_y + distances * np.sin(angles)
+
+    edge_traces = []
+    for i in range(len(game_nodes)):
+        edge_trace = go.Scatter(
+            x=[user_x, x[i]], y=[user_y, y[i]],
+            mode='lines',
+            line=dict(color='gray', width=0.5),
+            hoverinfo='none'
+        )
+        edge_traces.append(edge_trace)
+
+    node_trace = go.Scatter(
+        x=[user_x] + list(x),
+        y=[user_y] + list(y),
+        mode='markers',
+        hoverinfo='text',
+        marker=dict(
+            size=[50] + [10 + 10 * score for score in normalized_scores],
+            color=['red'] + [f'rgb({random.randint(0, 255)}, {random.randint(0, 255)}, {random.randint(0, 255)})' for _ in game_nodes]
+        ),
+        text=['User'] + [game_node.node.__str__() for game_node in game_nodes],
+        textposition="top center"
+    )
+    
+    fig = go.Figure(data=edge_traces + [node_trace])
+    fig.update_layout(title="User-Game Graph", title_x=0.5, font= dict(size=20, color='#ffffff'), showlegend=False, xaxis=dict(range=[0, 1],showgrid=True, visible=True), yaxis=dict(range=[0, 1],showgrid=True, visible=True),plot_bgcolor='#192841', paper_bgcolor='#192841')
+    return fig
+
 if __name__ == '__main__':
     
-    if os.path.isfile('GameDetails.csv') == False:
+    if os.path.isfile('SteamGames.json') == False:
 
         if os.path.isfile('Appid.json'):
             AppID = ReadJSON('Appid.json')
@@ -516,9 +661,10 @@ if __name__ == '__main__':
             GameDetails = GetSteamGameDetails(AppID)
             WriteJSON('GameDetails.json',GameDetails)
         
-        WriteGameDetailsCSV('GameDetails.csv',GameDetails)
+        WriteSteamGamesCSV('SteamGames.csv',GameDetails)
+        CSVtoJson('GameDetails.csv', 'SteamGames.json')
     
-    GameList = ReadGameDetailsCSV('GameDetails.csv')
+    GameList = ReadSteamGamesJSON('SteamGames.json')
 
     while True:
 
@@ -545,6 +691,8 @@ if __name__ == '__main__':
                 similarity = ComputeSimilarity(UserPreferences, game_vertex.node) 
                 score = similarity + (game_vertex.node.Rating / 100.0) + 3*(game_vertex.node.Recommendations /  MaxRecommendation)
                 game_graph.add_edge(user_vertex, game_vertex, similarity, score)
+
+        print(game_graph.edges)
 
         recommendations = game_graph.get_recommendations(user_vertex, k=5)
 
