@@ -50,3 +50,4 @@ python app.py
 ## Acknowledgments
 * Valve Corporation for providing the Steam API.
 * Metacritic website for proving the Game Rating
+* Special thanks to WallpaperAccess for providing the background images used in the application.
