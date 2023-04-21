@@ -48,7 +48,7 @@ class User:
 ```
 Example:
 ```python
-user = User('A', 'Action', False, 'Online PvP', 'windows', 2022,)
+user = User('A', 'Action', False, 'Online PvP', 'windows', 2022)
 ```
 ### Graph Data Structure
 The recommendation algorithm uses a graph data structure to represent relationships between users and games. Nodes represent games, and edges represent user preferences, with edge weights indicating the strength of the connection between a game and the user's preferences.
