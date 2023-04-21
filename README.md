@@ -9,6 +9,50 @@ This game recommendation system is a Flask-based web application that helps user
 * Visualize the user-game graph Flask-based web application for easy interaction with the recommendation system
 * Detailed game descriptions, including information such as the game's title, genres, platform, release year, and more
 
+## Data Organization and Structure
+The application retrieves game data from the Steam API and Metacritic website. This data is organized into several data structures to facilitate the recommendation process and improve the user experience:
+
+### Game Data
+Each game is represented by a Game class containing essential information:
+```python
+class Game():
+    def __init__(self, GameID= None, Name= None, Genres= None, Free= None, Price= None, Platform= None, Categories= None, Description= None, Recommendations= 0, Rating= None, ReleaseDate= None):
+        self.GameID = GameID
+        self.Name = Name
+        self.Genres = Genres
+        self.Free = True if Free == "TRUE" else False
+        self.Price = Price
+        self.Platform = Platform
+        self.Categories = Categories
+        self.Description = Description
+        self.Recommendations = int(Recommendations) if Recommendations.isnumeric() else 0
+        self.Rating = int(Rating) if Rating.isnumeric() else 0
+        self.ReleaseDate = ReleaseDate
+        self.Image = f"https://cdn.akamai.steamstatic.com/steam/apps/{self.GameID}/header.jpg"
+```
+Example:
+```python
+game = Game("Half-Life 2", ["Action", "Adventure"], "PC", 2004, 96, 220)
+```
+### User Preferences
+User preferences are stored in a User class:
+```python
+class User:
+    def __init__(self, UserID=None, Genres=None, Free=None, Categories=None, Platform=None, ReleaseYear=None):
+        self.UserID = UserID
+        self.Genres = Genres
+        self.Free = Free
+        self.Categories = Categories
+        self.Platform = Platform
+        self.ReleaseYear = ReleaseYear
+```
+Example:
+```python
+user = User('A', 'Action', False, 'Online PvP', 'windows', 2022,)
+```
+### Graph Data Structure
+The recommendation algorithm uses a graph data structure to represent relationships between users and games. Nodes represent games, and edges represent user preferences, with edge weights indicating the strength of the connection between a game and the user's preferences.
+
 ## Getting Started
 ### Prerequisites
 * Python 3.x
