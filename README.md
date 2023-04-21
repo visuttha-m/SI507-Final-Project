@@ -32,7 +32,7 @@ class Game():
 ```
 Example:
 ```python
-game = Game("Half-Life 2", ["Action", "Adventure"], "PC", 2004, 96, 220)
+game = Game(10, "Half-Life 2", ["Action", "Adventure"], False, "10$", "windows", "Online", "Best PC Game Ever", 1000, 98, "Nov 16, 2004")
 ```
 ### User Preferences
 User preferences are stored in a User class:
